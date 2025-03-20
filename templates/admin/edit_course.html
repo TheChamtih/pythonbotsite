@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование курса{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_courses') }}">Курсы</a></li>
+            <li class="breadcrumb-item active">Редактирование курса</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title mb-4">Редактирование курса</h1>
+
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4") }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col">
+                                {{ form.min_age.label(class="form-label") }}
+                                {{ form.min_age(class="form-control") }}
+                            </div>
+                            <div class="col">
+                                {{ form.max_age.label(class="form-label") }}
+                                {{ form.max_age(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            {{ form.tags.label(class="form-label") }}
+                            {{ form.tags(class="form-control") }}
+                            <small class="text-muted">Введите теги через запятую</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <a href="{{ url_for('admin_courses') }}" class="btn btn-secondary me-2">
+                        <i class="fa-solid fa-xmark"></i> Отмена
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-save"></i> {{ form.submit.label.text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

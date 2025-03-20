@@ -1,0 +1,17 @@
+[Unit]
+Description=Algoritmika Telegram Bot
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=algoritmika
+Group=algoritmika
+WorkingDirectory=/opt/algoritmika
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/opt/algoritmika/.env
+ExecStart=/usr/bin/python3 bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Личный кабинет</h1>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о профиле</h5>
+                    <p class="card-text">
+                        <strong>Имя родителя:</strong> {{ current_user.parent_name or 'Не указано' }}<br>
+                        <strong>Телефон:</strong> {{ current_user.phone or 'Не указан' }}<br>
+                        <strong>Имя ребенка:</strong> {{ current_user.child_name or 'Не указано' }}<br>
+                        <strong>Возраст ребенка:</strong> {{ current_user.child_age or 'Не указан' }}
+                    </p>
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-pen"></i> Редактировать профиль
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Последние активности</h5>
+                    <div class="list-group">
+                        {% for lesson in trial_lessons[:3] %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ lesson.course.name }}</h6>
+                                <small class="text-muted">{{ lesson.created_at.strftime('%d.%m.%Y') }}</small>
+                            </div>
+                            <p class="mb-1">
+                                Статус: 
+                                {% if lesson.confirmed %}
+                                    <span class="badge bg-success">Подтверждено</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Ожидает подтверждения</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if trial_lessons %}
+                    <a href="{{ url_for('user_applications') }}" class="btn btn-link mt-3">
+                        Все заявки <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Мои отзывы</h5>
+                    {% if reviews %}
+                    <div class="list-group">
+                        {% for review in reviews[:3] %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ review.course.name }}</h6>
+                                <small class="text-muted">{{ review.created_at.strftime('%d.%m.%Y') }}</small>
+                            </div>
+                            <div class="rating-display mb-2">
+                                {% for i in range(5) %}
+                                    {% if (review.rating - i) >= 1 %}
+                                        <i class="fa-solid fa-star text-warning"></i>
+                                    {% elif (review.rating - i) >= 0.5 %}
+                                        <i class="fa-solid fa-star-half-stroke text-warning"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if review.comment %}
+                            <p class="mb-1">{{ review.comment }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ url_for('user_reviews') }}" class="btn btn-link mt-3">
+                        Все отзывы <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    {% else %}
+                    <p class="text-muted">У вас пока нет отзывов о курсах</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

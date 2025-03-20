@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика отзывов{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="admin-header">
+        <h1 class="mb-4 mt-5">Статистика отзывов</h1>
+    </div>
+
+    <!-- Общая статистика -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-4 mb-3">
+            <div class="stats-card card">
+                <div class="card-body text-center">
+                    <h3 class="card-title stats-value">{{ total_reviews }}</h3>
+                    <p class="card-text">Всего отзывов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-3">
+            <div class="stats-card card">
+                <div class="card-body text-center">
+                    <h3 class="card-title stats-value">{{ average_rating|round(1) }}</h3>
+                    <p class="card-text">Средний рейтинг</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-3">
+            <div class="stats-card card">
+                <div class="card-body text-center">
+                    <h3 class="card-title stats-value">{{ reviews_with_comments }}</h3>
+                    <p class="card-text">Отзывов с комментариями</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- График распределения оценок -->
+        <div class="col-12 col-lg-8 mb-4">
+            <div class="card admin-content">
+                <div class="card-body">
+                    <h5 class="card-title">Распределение оценок</h5>
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="ratingsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- График источников отзывов -->
+        <div class="col-12 col-lg-4 mb-4">
+            <div class="card admin-content">
+                <div class="card-body">
+                    <h5 class="card-title">Источники отзывов</h5>
+                    <div class="chart-container" style="position: relative; height:300px;">
+                        <canvas id="sourcesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список последних отзывов -->
+    <div class="card admin-content">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Последние отзывы</h5>
+            <div class="table-responsive">
+                <table class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Курс</th>
+                            <th>Оценка</th>
+                            <th>Автор</th>
+                            <th>Источник</th>
+                            <th>Комментарий</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for review in recent_reviews %}
+                        <tr>
+                            <td data-label="Дата">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td data-label="Курс">{{ review.course.name }}</td>
+                            <td data-label="Оценка">
+                                <div class="rating-display">
+                                    {% for i in range(5) %}
+                                        {% if (review.rating - i) >= 1 %}
+                                            <i class="fa-solid fa-star text-warning"></i>
+                                        {% elif (review.rating - i) >= 0.5 %}
+                                            <i class="fa-solid fa-star-half-stroke text-warning"></i>
+                                        {% else %}
+                                            <i class="fa-regular fa-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td data-label="Автор">{{ review.reviewer_name or 'Анонимно' }}</td>
+                            <td data-label="Источник">
+                                {% if review.source == 'telegram' %}
+                                    <span class="badge bg-info">Telegram</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Сайт</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Комментарий">
+                                <div class="text-truncate" style="max-width: 200px;">
+                                    {{ review.comment or '-' }}
+                                </div>
+                            </td>
+                            <td data-label="Действия">
+                                <button class="btn btn-danger btn-sm" 
+                                        onclick="deleteReview({{ review.id }}, '{{ review.course.name|e }}')">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // График распределения оценок
+    const ratingsCtx = document.getElementById('ratingsChart').getContext('2d');
+    new Chart(ratingsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ ratings_labels|tojson }},
+            datasets: [{
+                label: 'Количество оценок',
+                data: {{ ratings_data|tojson }},
+                backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                borderColor: 'rgba(74, 144, 226, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    });
+
+    // График источников отзывов
+    const sourcesCtx = document.getElementById('sourcesChart').getContext('2d');
+    new Chart(sourcesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Сайт', 'Telegram'],
+            datasets: [{
+                data: {{ sources_data|tojson }},
+                backgroundColor: [
+                    'rgba(74, 144, 226, 0.7)',
+                    'rgba(243, 156, 18, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(74, 144, 226, 1)',
+                    'rgba(243, 156, 18, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+});
+
+// Функция для удаления отзыва
+function deleteReview(reviewId, courseName) {
+    if (confirm(`Вы уверены, что хотите удалить отзыв для курса "${courseName}"?`)) {
+        window.location.href = `/admin/reviews/${reviewId}/delete`;
+    }
+}
+</script>
+{% endblock %}

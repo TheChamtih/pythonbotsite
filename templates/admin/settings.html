@@ -1,0 +1,462 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-light">Настройки сайта</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <!-- Tabs navigation -->
+            <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
+                        <i class="fa-solid fa-gear"></i> Основные
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab">
+                        <i class="fa-solid fa-palette"></i> Внешний вид
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="social-tab" data-bs-toggle="tab" data-bs-target="#social" type="button" role="tab">
+                        <i class="fa-solid fa-share-nodes"></i> Соц. сети
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="footer-tab" data-bs-toggle="tab" data-bs-target="#footer" type="button" role="tab">
+                        <i class="fa-solid fa-bars-staggered"></i> Футер
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="seo-tab" data-bs-toggle="tab" data-bs-target="#seo" type="button" role="tab">
+                        <i class="fa-solid fa-magnifying-glass"></i> SEO
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab">
+                        <i class="fa-solid fa-file-lines"></i> Контент
+                    </button>
+                </li>
+            </ul>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="tab-content" id="settingsTabContent">
+                    <!-- Основные настройки -->
+                    <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Основные настройки</h4>
+                            <div class="mb-3">
+                                <label for="site_name" class="form-label">Название сайта</label>
+                                <input type="text" class="form-control" id="site_name" name="site_name" value="{{ site_settings.site_name }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="site_icon" class="form-label">Иконка сайта</label>
+                                <input type="file" class="form-control" id="site_icon" name="site_icon" accept="image/*">
+                                <small class="text-muted">Текущая иконка: {{ site_settings.site_icon }}</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="logo_icon_class" class="form-label">Класс иконки логотипа</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="logo_icon_class" name="logo_icon_class" value="{{ site_settings.logo_icon_class }}">
+                                    <span class="input-group-text">
+                                        <i id="logo_icon_preview" class="{{ site_settings.logo_icon_class }}"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">Используйте классы Font Awesome, например: fa-solid fa-graduation-cap</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Внешний вид -->
+                    <div class="tab-pane fade" id="appearance" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Настройки внешнего вида</h4>
+
+                            <!-- Цветовая схема -->
+                            <div class="mb-4">
+                                <h5>Цветовая схема</h5>
+                                <div class="mb-3">
+                                    <label for="primary_color" class="form-label">Основной цвет</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color" value="{{ site_settings.primary_color }}">
+                                        <span class="input-group-text">Основной цвет сайта</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="accent_color" class="form-label">Цвет акцентов</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="accent_color" name="accent_color" value="{{ site_settings.accent_color }}">
+                                        <span class="input-group-text">Цвет акцентных элементов</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Шрифты -->
+                            <div class="mb-4">
+                                <h5>Шрифты</h5>
+                                <div class="mb-3">
+                                    <label for="heading_font" class="form-label">Шрифт заголовков</label>
+                                    <select class="form-select bg-dark text-light" id="heading_font" name="heading_font">
+                                        <option value="Roboto" {% if site_settings.heading_font == 'Roboto' %}selected{% endif %}>Roboto</option>
+                                        <option value="Open Sans" {% if site_settings.heading_font == 'Open Sans' %}selected{% endif %}>Open Sans</option>
+                                        <option value="PT Sans" {% if site_settings.heading_font == 'PT Sans' %}selected{% endif %}>PT Sans</option>
+                                        <option value="Noto Sans" {% if site_settings.heading_font == 'Noto Sans' %}selected{% endif %}>Noto Sans</option>
+                                        <option value="Inter" {% if site_settings.heading_font == 'Inter' %}selected{% endif %}>Inter</option>
+                                        <option value="Montserrat" {% if site_settings.heading_font == 'Montserrat' %}selected{% endif %}>Montserrat</option>
+                                        <option value="Ubuntu" {% if site_settings.heading_font == 'Ubuntu' %}selected{% endif %}>Ubuntu</option>
+                                    </select>
+                                    <div class="font-preview mt-2 p-3 bg-dark text-light">
+                                        Предпросмотр шрифта заголовков<br>
+                                        Текст на русском языке
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="body_font" class="form-label">Шрифт текста</label>
+                                    <select class="form-select bg-dark text-light" id="body_font" name="body_font">
+                                        <option value="Roboto" {% if site_settings.body_font == 'Roboto' %}selected{% endif %}>Roboto</option>
+                                        <option value="Open Sans" {% if site_settings.body_font == 'Open Sans' %}selected{% endif %}>Open Sans</option>
+                                        <option value="PT Sans" {% if site_settings.body_font == 'PT Sans' %}selected{% endif %}>PT Sans</option>
+                                        <option value="Noto Sans" {% if site_settings.body_font == 'Noto Sans' %}selected{% endif %}>Noto Sans</option>
+                                        <option value="Inter" {% if site_settings.body_font == 'Inter' %}selected{% endif %}>Inter</option>
+                                        <option value="Montserrat" {% if site_settings.body_font == 'Montserrat' %}selected{% endif %}>Montserrat</option>
+                                        <option value="Ubuntu" {% if site_settings.body_font == 'Ubuntu' %}selected{% endif %}>Ubuntu</option>
+                                    </select>
+                                    <div class="font-preview mt-2 p-3 bg-dark text-light">
+                                        Предпросмотр шрифта текста<br>
+                                        Текст на русском языке
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="footer_icons_color" class="form-label">Цвет иконок в футере</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="footer_icons_color" name="footer_icons_color" value="{{ site_settings.footer_icons_color }}">
+                                    <span class="input-group-text">Предпросмотр иконок</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact_icons_color" class="form-label">Цвет иконок в контактах</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control form-control-color" id="contact_icons_color" name="contact_icons_color" value="{{ site_settings.contact_icons_color }}">
+                                    <span class="input-group-text">Предпросмотр иконок контактов</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEO -->
+                    <div class="tab-pane fade" id="seo" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">SEO настройки</h4>
+
+                            <!-- Meta теги -->
+                            <div class="mb-4">
+                                <h5>Meta теги</h5>
+                                <div class="mb-3">
+                                    <label for="meta_description" class="form-label">Meta Description</label>
+                                    <input type="text" class="form-control" id="meta_description" name="meta_description" value="{{ site_settings.meta_description }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="meta_keywords" class="form-label">Meta Keywords</label>
+                                    <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" value="{{ site_settings.meta_keywords }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="meta_author" class="form-label">Meta Author</label>
+                                    <input type="text" class="form-control" id="meta_author" name="meta_author" value="{{ site_settings.meta_author }}">
+                                </div>
+                            </div>
+
+                            <!-- Open Graph -->
+                            <div class="mb-4">
+                                <h5>Open Graph</h5>
+                                <div class="mb-3">
+                                    <label for="og_title" class="form-label">OG Title</label>
+                                    <input type="text" class="form-control" id="og_title" name="og_title" value="{{ site_settings.og_title or '' }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="og_description" class="form-label">OG Description</label>
+                                    <textarea class="form-control" id="og_description" name="og_description" rows="2">{{ site_settings.og_description or '' }}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="og_image" class="form-label">OG Image URL</label>
+                                    <input type="url" class="form-control" id="og_image" name="og_image" value="{{ site_settings.og_image or '' }}">
+                                </div>
+                            </div>
+
+                            <!-- Аналитика -->
+                            <div class="mb-4">
+                                <h5>Аналитика</h5>
+                                <div class="mb-3">
+                                    <label for="google_analytics_id" class="form-label">Google Analytics ID</label>
+                                    <input type="text" class="form-control" id="google_analytics_id" name="google_analytics_id" value="{{ site_settings.google_analytics_id }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="yandex_metrika_id" class="form-label">Яндекс.Метрика ID</label>
+                                    <input type="text" class="form-control" id="yandex_metrika_id" name="yandex_metrika_id" value="{{ site_settings.yandex_metrika_id }}">
+                                </div>
+                            </div>
+
+                            <!-- Robots.txt -->
+                            <div class="mb-3">
+                                <label for="robots_txt" class="form-label">Robots.txt</label>
+                                <textarea class="form-control" id="robots_txt" name="robots_txt" rows="4">{{ site_settings.robots_txt }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Контент -->
+                    <div class="tab-pane fade" id="content" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Настройки контента</h4>
+
+                            <div class="mb-4">
+                                <label for="welcome_text" class="form-label">Текст приветствия</label>
+                                <textarea class="form-control" id="welcome_text" name="welcome_text" rows="3">{{ site_settings.welcome_text }}</textarea>
+                                <small class="text-muted">Этот текст будет отображаться на главной странице</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="terms_of_service" class="form-label">Условия использования</label>
+                                <textarea class="form-control" id="terms_of_service" name="terms_of_service" rows="10">{{ site_settings.terms_of_service }}</textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="privacy_policy" class="form-label">Политика конфиденциальности</label>
+                                <textarea class="form-control" id="privacy_policy" name="privacy_policy" rows="10">{{ site_settings.privacy_policy }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Социальные сети -->
+                    <div class="tab-pane fade" id="social" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Социальные сети</h4>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="show_social_icons" name="show_social_icons" value="true" {% if site_settings.show_social_icons %}checked{% endif %}>
+                                    <label class="form-check-label" for="show_social_icons">Показывать иконки социальных сетей</label>
+                                </div>
+                            </div>
+
+                            <div id="social_links" {% if not site_settings.show_social_icons %}style="opacity: 0.5"{% endif %}>
+                                <div class="mb-3">
+                                    <label for="website_url" class="form-label">
+                                        <i class="fa-solid fa-globe"></i> Веб-сайт URL
+                                    </label>
+                                    <input type="url" class="form-control" id="website_url" name="website_url" value="{{ site_settings.website_url or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="facebook_url" class="form-label">
+                                        <i class="fa-brands fa-facebook"></i> Facebook URL
+                                    </label>
+                                    <input type="url" class="form-control" id="facebook_url" name="facebook_url" value="{{ site_settings.facebook_url or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="instagram_url" class="form-label">
+                                        <i class="fa-brands fa-instagram"></i> Instagram URL
+                                    </label>
+                                    <input type="url" class="form-control" id="instagram_url" name="instagram_url" value="{{ site_settings.instagram_url or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="telegram_url" class="form-label">
+                                        <i class="fa-brands fa-telegram"></i> Telegram URL
+                                    </label>
+                                    <input type="url" class="form-control" id="telegram_url" name="telegram_url" value="{{ site_settings.telegram_url or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="vk_url" class="form-label">
+                                        <i class="fa-brands fa-vk"></i> VK URL
+                                    </label>
+                                    <input type="url" class="form-control" id="vk_url" name="vk_url" value="{{ site_settings.vk_url or '' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="whatsapp_url" class="form-label">
+                                        <i class="fa-brands fa-whatsapp"></i> WhatsApp URL
+                                    </label>
+                                    <input type="url" class="form-control" id="whatsapp_url" name="whatsapp_url" value="{{ site_settings.whatsapp_url or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Футер -->
+                    <div class="tab-pane fade" id="footer" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Содержание футера</h4>
+                            <div class="mb-3">
+                                <label for="footer_about" class="form-label">О нас</label>
+                                <textarea class="form-control" id="footer_about" name="footer_about" rows="3">{{ site_settings.footer_about }}</textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Контактная информация</label>
+                                <div class="contact-fields">
+                                    <!-- Адрес -->
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                        </span>
+                                        <input type="text" class="form-control" name="contact_address" placeholder="Адрес" value="{{ site_settings.contact_address }}">
+                                    </div>
+                                    <!-- Email -->
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </span>
+                                        <input type="email" class="form-control" name="contact_email" placeholder="Email" value="{{ site_settings.contact_email }}">
+                                    </div>
+                                    <!-- Телефон -->
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-phone"></i>
+                                        </span>
+                                        <input type="tel" class="form-control" name="contact_phone" placeholder="Телефон" value="{{ site_settings.contact_phone }}">
+                                    </div>
+                                    <!-- Часы работы -->
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">
+                                            <i class="fa-solid fa-clock"></i>
+                                        </span>
+                                        <textarea class="form-control" name="contact_hours" placeholder="Часы работы" rows="3">{{ site_settings.contact_hours }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meta-теги -->
+                    <div class="tab-pane fade" id="meta" role="tabpanel">
+                        <div class="settings-group">
+                            <h4 class="border-bottom pb-2 mb-4">Meta-теги</h4>
+                            <div class="mb-3">
+                                <label for="meta_description" class="form-label">Meta Description</label>
+                                <input type="text" class="form-control" id="meta_description" name="meta_description" value="{{ site_settings.meta_description }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="meta_keywords" class="form-label">Meta Keywords</label>
+                                <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" value="{{ site_settings.meta_keywords }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="meta_author" class="form-label">Meta Author</label>
+                                <input type="text" class="form-control" id="meta_author" name="meta_author" value="{{ site_settings.meta_author }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-4">
+                    <i class="fa-solid fa-save"></i> Сохранить настройки
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.settings-group {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.nav-tabs .nav-link:hover {
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-tabs .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+}
+
+.tab-content {
+    padding-top: 1rem;
+}
+
+/* Preview styles */
+#logo_icon_preview {
+    font-size: 1.5rem;
+}
+
+/* Social links opacity transition */
+#social_links {
+    transition: opacity 0.3s ease;
+}
+
+/* Font preview */
+.font-preview {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+}
+.form-select {
+    background-color: var(--bs-dark) !important;
+    color: var(--bs-light) !important;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+</style>
+
+<script>
+// Live preview for logo icon
+document.getElementById('logo_icon_class').addEventListener('input', function() {
+    const preview = document.getElementById('logo_icon_preview');
+    preview.className = this.value;
+});
+
+// Toggle social links opacity
+document.getElementById('show_social_icons').addEventListener('change', function() {
+    const socialLinks = document.getElementById('social_links');
+    socialLinks.style.opacity = this.checked ? '1' : '0.5';
+});
+
+// Apply footer icons color
+document.getElementById('footer_icons_color').addEventListener('input', function() {
+    document.querySelectorAll('.footer-icons i').forEach(icon => {
+        icon.style.color = this.value;
+    });
+});
+
+// Apply contact icons color
+document.getElementById('contact_icons_color').addEventListener('input', function() {
+    document.querySelectorAll('.contact-fields i').forEach(icon => {
+        icon.style.color = this.value;
+    });
+});
+
+// Font preview
+document.getElementById('heading_font').addEventListener('change', function() {
+    const preview = this.parentElement.querySelector('.font-preview');
+    preview.style.fontFamily = this.value;
+});
+
+document.getElementById('body_font').addEventListener('change', function() {
+    const preview = this.parentElement.querySelector('.font-preview');
+    preview.style.fontFamily = this.value;
+});
+</script>
+{% endblock %}

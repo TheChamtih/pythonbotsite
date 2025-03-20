@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+
+{% block title %}Управление администраторами{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+}
+
+.btn-group .btn {
+    margin: 0 2px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.875rem;
+    padding: 0.5em 0.75em;
+}
+
+.modal-header .modal-title {
+    display: flex;
+    align-items: center;
+}
+
+.input-group-text {
+    background-color: #222222;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Анимация для кнопок */
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s;
+}
+
+/* Стили для статус-бейджей */
+.badge.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+/* Улучшенный стиль для аватаров */
+.avatar-sm {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.avatar-sm:hover {
+    transform: scale(1.1);
+}
+
+/* Темная тема для поиска и фильтров */
+.search-filters {
+    background-color: #2b3035;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.search-filters .form-control,
+.search-filters .form-select {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #fff;
+}
+
+.search-filters .form-control::placeholder {
+    color: #adb5bd;
+}
+
+.search-filters .form-control:focus,
+.search-filters .form-select:focus {
+    background-color: #3b4147;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+.search-filters .input-group-text {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #adb5bd;
+}
+
+/* Мобильные стили */
+@media (max-width: 767px) {
+    /* Статистика */
+    .card-body .h3 {
+        font-size: 1.5rem;
+    }
+
+    /* Поиск и фильтры */
+    .search-filters .row > div {
+        margin-bottom: 1rem;
+    }
+
+    /* Таблица */
+    /*.table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+        border-radius: 0;
+    }
+
+    .table td {
+        white-space: normal;
+        min-width: 200px;
+    }*/
+
+    /* Профиль администратора */
+    .admin-profile {
+        /*flex-direction: column;*/
+        text-align: center;
+    }
+
+    /*.admin-profile .avatar-sm {
+        margin: 0 auto 1rem;
+    }*/
+
+    /* Кнопки действий */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        width: 100%;
+        margin: 2px 0;
+        border-radius: 4px !important;
+    }
+
+    /* Модальные окна */
+    .modal-dialog {
+        margin: 10px;
+        padding: 0;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    /* Статистика в карточках */
+    .row .col-md-3 {
+        margin-bottom: 1rem;
+    }
+
+    /* Заголовки и действия */
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .d-flex.justify-content-between .btn {
+        width: 100%;
+    }
+
+    /* Таблица администраторов 
+    .table td .d-flex {
+        flex-direction: column;
+        align-items: start !important;
+    }
+
+    .table td .d-flex > div {
+        margin-top: 0.5rem;
+    }
+
+    /* Контактная информация 
+    .table td > div {
+        margin: 0.25rem 0;
+    }*/
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Всего администраторов</h5>
+                    <h2 class="mb-0">{{ admins|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Активных сегодня</h5>
+                    <h2 class="mb-0">{{ active_admins|default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h3 mb-0">Управление администраторами</h1>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+                            <i class="bi bi-plus-circle me-2"></i>Добавить администратора
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Поиск и фильтры -->
+    <div class="card mb-4">
+        <div class="card-body search-filters">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchAdmin" placeholder="Поиск по имени или email...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="filterRole">
+                        <option value="">Все роли</option>
+                        <option value="super">Супер-администратор</option>
+                        <option value="regular">Обычный администратор</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="sortBy">
+                        <option value="name">Сортировать по имени</option>
+                        <option value="date">Сортировать по дате регистрации</option>
+                        <option value="activity">Сортировать по активности</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица администраторов -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Профиль</th>
+                            <th>Контакты</th>
+                            <th>Статус</th>
+                            <th>Последняя активность</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr data-last-active="{{ admin.last_active|default('', true) }}" data-name="{{ admin.first_name }} {{ admin.last_name }}">
+                            <td>{{ admin.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center admin-profile">
+                                    <div class="avatar-sm bg-primary rounded-circle text-white me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        {{ admin.first_name[0] }}{{ admin.last_name[0] }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ admin.first_name }} {{ admin.last_name }}</h6>
+                                        <small class="text-muted">@{{ admin.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div><i class="bi bi-envelope me-2"></i>{{ admin.email }}</div>
+                                <div><i class="bi bi-telegram me-2"></i>{{ admin.telegram_id }}</div>
+                            </td>
+                            <td>
+                                {% if admin.telegram_id == main_admin_id %}
+                                <span class="badge bg-primary">Супер-админ</span>
+                                {% else %}
+                                <span class="badge bg-success">Администратор</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    <i class="bi bi-clock-history me-2"></i>
+                                    <span>{{ admin.last_active|default('Нет данных', true) }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editAdminModal{{ admin.id }}"
+                                            title="Редактировать">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    {% if admin.telegram_id != main_admin_id %}
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger delete-admin"
+                                            data-admin-id="{{ admin.id }}"
+                                            data-admin-name="{{ admin.first_name }} {{ admin.last_name }}"
+                                            title="Удалить">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Elements -->
+    {% for admin in admins %}
+    <div class="modal fade" id="editAdminModal{{ admin.id }}" tabindex="-1" aria-labelledby="editAdminModalLabel{{ admin.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAdminModalLabel{{ admin.id }}">
+                        <i class="bi bi-person-gear me-2"></i>Редактировать администратора
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('edit_admin', id=admin.id) }}" method="POST" class="edit-admin-form">
+                    <div class="modal-body">
+                        {{ edit_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ edit_form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                {{ edit_form.email(class="form-control", value=admin.email) }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ edit_form.telegram_id.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telegram"></i></span>
+                                {{ edit_form.telegram_id(class="form-control", value=admin.telegram_id) }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ edit_form.username.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ edit_form.username(class="form-control", value=admin.username) }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ edit_form.first_name.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                {{ edit_form.first_name(class="form-control", value=admin.first_name) }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ edit_form.last_name.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                {{ edit_form.last_name(class="form-control", value=admin.last_name) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAdminModalLabel">
+                        <i class="bi bi-person-plus me-2"></i>Добавить администратора
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('add_admin') }}" method="POST" class="add-admin-form">
+                    <div class="modal-body">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                {{ form.email(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.telegram_id.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telegram"></i></span>
+                                {{ form.telegram_id(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                {{ form.username(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                {{ form.first_name(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                {{ form.last_name(class="form-control") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Добавить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы действительно хотите удалить администратора <span id="adminNameToDelete"></span>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form id="deleteAdminForm" method="POST" style="display: inline;">
+                        {{ form.csrf_token }}
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchAdmin');
+    const filterRole = document.getElementById('filterRole');
+    const sortBy = document.getElementById('sortBy');
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+
+    // Инициализация модального окна
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'), {
+        keyboard: true,
+        backdrop: true,
+        focus: true
+    });
+
+    const deleteForm = document.getElementById('deleteAdminForm');
+    const adminNameSpan = document.getElementById('adminNameToDelete');
+
+    // Функция для форматирования даты
+    function parseDate(dateStr) {
+        if (!dateStr) return new Date(0);
+        return new Date(dateStr);
+    }
+
+    // Функция фильтрации
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const roleFilter = filterRole.value;
+
+        rows.forEach(row => {
+            const name = row.querySelector('h6').textContent.toLowerCase();
+            const email = row.querySelectorAll('td')[2].textContent.toLowerCase();
+            const role = row.querySelector('.badge').textContent.toLowerCase();
+
+            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+            const matchesRole = !roleFilter || 
+                              (roleFilter === 'super' && role.includes('супер')) ||
+                              (roleFilter === 'regular' && role.includes('администратор'));
+
+            row.style.display = matchesSearch && matchesRole ? '' : 'none';
+        });
+    }
+
+    // Функция сортировки
+    function sortTable() {
+        const sortValue = sortBy.value;
+        rows.sort((a, b) => {
+            switch(sortValue) {
+                case 'name':
+                    const nameA = a.dataset.name;
+                    const nameB = b.dataset.name;
+                    return nameA.localeCompare(nameB);
+                case 'date':
+                    const dateA = parseDate(a.dataset.lastActive);
+                    const dateB = parseDate(b.dataset.lastActive);
+                    return dateB - dateA;
+                case 'activity':
+                    const activityA = a.dataset.lastActive ? 1 : 0;
+                    const activityB = b.dataset.lastActive ? 1 : 0;
+                    return activityB - activityA;
+                default:
+                    return 0;
+            }
+        });
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Обработчики событий для поиска и фильтрации
+    searchInput.addEventListener('input', filterTable);
+    filterRole.addEventListener('change', filterTable);
+    sortBy.addEventListener('change', sortTable);
+
+    // Обработка удаления администратора
+    const deleteButtons = document.querySelectorAll('.delete-admin');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const adminId = this.dataset.adminId;
+            const adminName = this.dataset.adminName;
+            deleteForm.action = `/admin/delete/${adminId}`;
+            adminNameSpan.textContent = adminName;
+            deleteConfirmModal.show();
+        });
+    });
+
+    // Обработка форм с индикацией загрузки
+    document.querySelectorAll('.edit-admin-form, .add-admin-form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Сохранение...';
+
+            // Возвращаем исходное состояние кнопки через 2 секунды (если форма не отправилась)
+            setTimeout(() => {
+                if(submitBtn.disabled) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

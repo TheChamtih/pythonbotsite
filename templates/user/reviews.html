@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Мои отзывы{% endblock %}
+
+{% block content %}
+<div class="container py-4 animated fade-in-up">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0 d-flex align-items-center">
+            <i class="fas fa-star text-warning me-3"></i>
+            Мои отзывы
+        </h1>
+        <a href="{{ url_for('index') }}" class="btn btn-primary hover-lift">
+            <i class="fas fa-plus me-2"></i>Написать новый отзыв
+        </a>
+    </div>
+
+    {% if reviews %}
+        <div class="row">
+            {% for review in reviews %}
+            <div class="col-md-6 mb-4 animated slide-in-left" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                <div class="card border-0 shadow-sm h-100 hover-lift">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title text-primary mb-0">{{ review.course.name }}</h5>
+                            <span class="badge bg-primary">{{ review.source|default('Сайт', true) }}</span>
+                        </div>
+
+                        <div class="rating-display mb-3">
+                            {% for i in range(5) %}
+                                {% if (review.rating - i) >= 1 %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif (review.rating - i) >= 0.5 %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2 text-muted">({{ "%.1f"|format(review.rating) }})</span>
+                        </div>
+
+                        {% if review.comment %}
+                            <p class="card-text">{{ review.comment }}</p>
+                        {% else %}
+                            <p class="card-text text-muted fst-italic">Без комментария</p>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ review.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            </small>
+                            {% if review.can_edit %}
+                            <div class="btn-group">
+                                <a href="{{ url_for('edit_review', review_id=review.id) }}" 
+                                   class="btn btn-sm btn-outline-primary hover-lift">
+                                    <i class="fas fa-edit me-1"></i>Изменить
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger hover-lift"
+                                        onclick="confirmDelete({{ review.id }})">
+                                    <i class="fas fa-trash-alt me-1"></i>Удалить
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="fas fa-info-circle fa-2x me-3"></i>
+            <div>
+                <h4 class="alert-heading mb-1">У вас пока нет отзывов</h4>
+                <p class="mb-0">Поделитесь своим мнением о курсах, которые вы посетили!</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-info ms-auto hover-lift">
+                <i class="fas fa-arrow-right me-2"></i>Перейти к курсам
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Вы действительно хотите удалить этот отзыв?
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary hover-lift" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Отмена
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger hover-lift">
+                        <i class="fas fa-trash-alt me-2"></i>Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(reviewId) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const form = document.getElementById('deleteForm');
+    form.action = `/reviews/${reviewId}/delete`;
+    modal.show();
+}
+
+// Анимация звезд рейтинга
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.rating-display i');
+    stars.forEach(star => {
+        star.style.transition = 'transform 0.2s ease';
+    });
+
+    document.querySelectorAll('.rating-display').forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            container.querySelectorAll('i').forEach((star, index) => {
+                setTimeout(() => {
+                    star.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        star.style.transform = 'scale(1)';
+                    }, 200);
+                }, index * 100);
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+    border-radius: 1rem;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.rating-display {
+    font-size: 1.2rem;
+}
+
+.rating-display i {
+    margin-right: 0.2rem;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+}
+
+/* Анимации */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.slide-in-left {
+    animation-name: slideInLeft;
+}
+
+.animated {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+}
+
+/* Модальное окно */
+.modal-content {
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header, .modal-footer {
+    border: none;
+}
+
+.alert {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+</style>
+{% endblock %}

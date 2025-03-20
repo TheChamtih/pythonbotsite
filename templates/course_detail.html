@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Стили для рейтинга звезд */
+    .stars {
+        position: relative;
+        display: inline-block;
+        font-size: 30pt;
+        height: 1em;
+        line-height: 1em;
+        margin-right: -20px;
+        white-space: nowrap;
+    }
+    .stars:before {   
+        content: "\2606\2606\2606\2606\2606";
+        float: left;
+        z-index: 1;
+    }
+    .stars .percent {
+        position: absolute;
+        left: 0;
+        float: left;
+        overflow: hidden;
+        z-index: -1;
+    }
+    .stars .percent:after {  
+        content: "\2605\2605\2605\2605\2605";
+        color: rgb(255, 200, 0);
+    }
+
+    .rating-display {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: nowrap;
+        margin: 1rem 0;
+    }
+
+    .rating-value {
+        font-size: 18pt;
+        white-space: nowrap;
+    }
+    .card-text{
+        font-size: 17px;
+    }
+
+    /* Мобильные стили */
+    @media (max-width: 767px) {
+        .stars {
+            font-size: 25pt;
+        }
+        .rating-display {
+            align-items: center !important;
+            margin-bottom: 1rem;
+        }
+        .rating-value {
+            font-size: 16pt;
+        }
+        .text-muted{
+            font-size: 15px;
+        }
+    }
+</style>
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
+            <li class="breadcrumb-item active">{{ course.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h1 class="card-title h2">{{ course.name }}</h1>
+
+            <div class="mb-3">
+                <div class="rating-display d-flex align-items-center">
+                    {% set rating = course.rating|round(1)|float %}
+                    <div class="rating-value me-2">{{ rating }} из 5</div>
+                    <div class="stars">
+                        <div class="percent" style="width: {{ (rating / 5 * 100)|round }}%;"></div>
+                    </div>
+                    <span class="text-muted ms-2">({{ course.rating_count }} оценок)</span>
+                </div>
+            </div>
+
+            <p class="card-text">{{ course.description }}</p>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Возрастная группа</h5>
+                    <p>От {{ course.min_age }} до {{ course.max_age }} лет</p>
+                </div>
+            </div>
+
+            {% if current_user.is_authenticated %}
+            <div class="mt-4">
+                <h5>Оценить курс</h5>
+                <form action="{{ url_for('rate_course', course_id=course.id) }}" method="POST" class="rating-form">
+                    <div class="rating-group mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="rating-value me-2">
+                                <span id="ratingValue">0.0</span> из 5
+                            </div>
+                            <div class="stars">
+                                <div class="percent" id="ratingPercent" style="width: 0%;"></div>
+                                <input type="hidden" name="rating" id="ratingInput" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий (необязательно)</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Отправить оценку</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-info mt-4">
+                Чтобы оставить отзыв, пожалуйста, <a href="{{ url_for('login') }}">войдите в систему</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Модальное окно для редактирования отзыва -->
+    <div class="modal fade" id="editReviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать отзыв</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editReviewForm" method="POST">
+                    <div class="modal-body">
+                        <div class="rating-group mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating-value me-2">
+                                    <span id="editRatingValue">0.0</span> из 5
+                                </div>
+                                <div class="stars">
+                                    <div class="percent" id="editRatingPercent" style="width: 0%;"></div>
+                                    <input type="hidden" name="rating" id="editRatingInput" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_comment" class="form-label">Комментарий</label>
+                            <textarea class="form-control" id="edit_comment" name="comment" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список отзывов -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Отзывы о курсе</h5>
+
+            <div id="reviewsList">
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <div class="review-item mb-4 border-bottom pb-3">
+                        <div class="d-flex">
+                            <div class="review-avatar me-3">
+                                {% if review.user %}
+                                    {% if review.user.avatar_url %}
+                                        <img src="{{ review.user.avatar_url }}" 
+                                             alt="{{ review.user.display_name }}" 
+                                             class="rounded-circle"
+                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            {{ review.user.first_name[0]|upper if review.user.first_name else 'A' }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                         style="width: 50px; height: 50px;">
+                                        A
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <div class="review-header">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="rating-display d-flex align-items-center">
+                                                <div class="stars" style="font-size:23pt; margin-top:-3px;">
+                                                    <div class="percent" style="width: {{ (review.rating / 5 * 100)|round }}%;"></div>
+                                                </div>
+                                                <div class="rating-value ms-3">{{ review.rating }} из 5</div>
+                                            </div>
+                                            <div class="reviewer-info">
+                                                <strong>{{ review.user.display_name }}</strong>
+                                                {% if review.source == 'telegram' %}
+                                                    <span class="badge bg-info ms-2">{{ review.display_source }}</span>
+                                                {% endif %}
+                                                <small class="text-muted d-block">
+                                                    {{ review.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                                    {% if review.updated_at and review.updated_at != review.created_at %}
+                                                        (ред. {{ review.updated_at.strftime('%d.%m.%Y %H:%M') }})
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <!--{% if review.can_edit %}
+                                        <div class="review-actions">
+                                            <div class="dropdown">
+                                                <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
+                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <button class="dropdown-item" onclick="editReview({{ review.id }})">
+                                                            <i class="fa-solid fa-pen me-2"></i>Редактировать
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="{{ url_for('delete_review', review_id=review.id) }}" onclick="return confirm('Вы уверены, что хотите удалить этот отзыв?')">
+                                                            <i class="fa-solid fa-trash me-2"></i>Удалить
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        {% endif %}-->
+                                    </div>
+                                </div>
+                                <div class="review-content mt-2">
+                                    {% if review.comment %}
+                                        <p class="mb-0">{{ review.comment }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Пока нет отзывов. Будьте первым!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация звездного рейтинга
+    const ratingInput = document.getElementById('ratingInput');
+    const ratingValue = document.getElementById('ratingValue');
+    const ratingPercent = document.getElementById('ratingPercent');
+    const starsContainer = document.querySelector('.rating-form .stars');
+
+    if (starsContainer) {
+        starsContainer.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const width = rect.width;
+            const x = e.clientX - rect.left;
+            let percent = (x / width) * 100;
+
+            // Округление до ближайшей половины звезды
+            const starsCount = 5;
+            const stepsPerStar = 2; // 2 шага на звезду (для половинок)
+            const totalSteps = starsCount * stepsPerStar;
+            const stepSize = 100 / totalSteps;
+            const currentStep = Math.round(percent / stepSize);
+            percent = (currentStep * stepSize);
+
+            const rating = (percent / 100) * 5;
+
+            ratingPercent.style.width = `${percent}%`;
+            ratingValue.textContent = rating.toFixed(1);
+            ratingInput.value = rating;
+        });
+
+        starsContainer.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const width = rect.width;
+            const x = e.clientX - rect.left;
+            let percent = (x / width) * 100;
+
+            // Округление до ближайшей половины звезды
+            const starsCount = 5;
+            const stepsPerStar = 2;
+            const totalSteps = starsCount * stepsPerStar;
+            const stepSize = 100 / totalSteps;
+            const currentStep = Math.round(percent / stepSize);
+            percent = (currentStep * stepSize);
+
+            const rating = (percent / 100) * 5;
+
+            ratingPercent.style.width = `${percent}%`;
+            ratingValue.textContent = rating.toFixed(1);
+            ratingInput.value = rating;
+        });
+
+        starsContainer.addEventListener('mouseleave', function() {
+            const rating = parseFloat(ratingInput.value) || 0;
+            const percent = (rating / 5) * 100;
+            ratingPercent.style.width = `${percent}%`;
+            ratingValue.textContent = rating.toFixed(1);
+        });
+    }
+});
+
+// Модальное окно редактирования
+const editModal = document.getElementById('editReviewModal');
+if (editModal) {
+    const editRatingInput = document.getElementById('editRatingInput');
+    const editRatingValue = document.getElementById('editRatingValue');
+    const editRatingPercent = document.getElementById('editRatingPercent');
+    const editStarsContainer = editModal.querySelector('.stars');
+
+    editStarsContainer.addEventListener('mousemove', function(e) {
+        const rect = this.getBoundingClientRect();
+        const width = rect.width;
+        const x = e.clientX - rect.left;
+        let percent = Math.round((x / width) * 100);
+        const rating = Math.round((percent * 5) / 100 * 2) / 2;
+
+        editRatingPercent.style.width = `${percent}%`;
+        editRatingValue.textContent = rating.toFixed(1);
+        editRatingInput.value = rating;
+    });
+
+    editStarsContainer.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const width = rect.width;
+        const x = e.clientX - rect.left;
+        let percent = Math.round((x / width) * 100);
+        const rating = Math.round((percent * 5) / 100 * 2) / 2;
+
+        editRatingPercent.style.width = `${percent}%`;
+        editRatingValue.textContent = rating.toFixed(1);
+        editRatingInput.value = rating;
+    });
+
+    editStarsContainer.addEventListener('mouseleave', function() {
+        const rating = parseFloat(editRatingInput.value) || 0;
+        const percent = (rating / 5) * 100;
+        editRatingPercent.style.width = `${percent}%`;
+        editRatingValue.textContent = rating.toFixed(1);
+    });
+}
+
+function editReview(reviewId) {
+    const editModal = new bootstrap.Modal(document.getElementById('editReviewModal'));
+    const form = document.getElementById('editReviewForm');
+    const reviewItem = document.querySelector(`.review-item[data-id="${reviewId}"]`);
+
+    if (reviewItem) {
+        const rating = parseFloat(reviewItem.querySelector('.rating-value').textContent);
+        const comment = reviewItem.querySelector('.review-content p')?.textContent || '';
+        const percent = (rating / 5) * 100;
+
+        document.getElementById('editRatingInput').value = rating;
+        document.getElementById('editRatingValue').textContent = rating.toFixed(1);
+        document.getElementById('editRatingPercent').style.width = `${percent}%`;
+        document.getElementById('edit_comment').value = comment;
+        form.action = `/review/${reviewId}/edit`;
+    }
+
+    editModal.show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_settings.site_name }}{% endblock %}</title>
+
+    <!-- Meta Tags -->
+    <meta name="description" content="{{ site_settings.meta_description }}">
+    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
+    <meta name="author" content="{{ site_settings.meta_author }}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ site_settings.og_title or site_settings.site_name }}">
+    <meta property="og:description" content="{{ site_settings.og_description or site_settings.meta_description }}">
+    <meta property="og:image" content="{{ site_settings.og_image }}">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family={{ site_settings.heading_font|replace(' ', '+') }}:wght@400;700&family={{ site_settings.body_font|replace(' ', '+') }}:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <link rel="icon" type="image/png" href="{{ site_settings.site_icon }}">
+
+    <style>
+        :root {
+            --primary-color: {{ site_settings.primary_color }};
+            --accent-color: {{ site_settings.accent_color }};
+        }
+
+        body {
+            font-family: '{{ site_settings.body_font }}', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: '{{ site_settings.heading_font }}', sans-serif;
+        }
+    </style>
+
+    {% block styles %}{% endblock %}
+
+    <!-- Google Analytics -->
+    {% if site_settings.google_analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ site_settings.google_analytics_id }}');
+    </script>
+    {% endif %}
+
+    <!-- Yandex.Metrika counter -->
+    {% if site_settings.yandex_metrika_id %}
+    <script>
+        (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+        ym({{ site_settings.yandex_metrika_id }}, "init", {
+            clickmap:true,
+            trackLinks:true,
+            accurateTrackBounce:true
+        });
+    </script>
+    {% endif %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Animated background particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="{{ site_settings.logo_icon_class }}"></i>
+                <span class="gradient-text">{{ site_settings.site_name }}</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">
+                            <i class="fa-solid fa-book-open"></i>
+                            <span class="gradient-text">Курсы</span>
+                        </a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span class="gradient-text">Админ-панель</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+                                    <i class="fa-solid fa-gauge-high"></i> Дашборд
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_statistics') }}">
+                                    <i class="fa-solid fa-chart-line"></i> Статистика
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_courses') }}">
+                                    <i class="fa-solid fa-book"></i> Курсы
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_locations') }}">
+                                    <i class="fa-solid fa-location-dot"></i> Локации
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_applications') }}">
+                                    <i class="fa-solid fa-user-plus"></i> Заявки
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_list') }}">
+                                    <i class="fa-solid fa-users-gear"></i> Администраторы
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_reviews') }}">
+                                    <i class="fa-solid fa-star"></i> Отзывы
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_settings') }}">
+                                    <i class="fa-solid fa-cog"></i> Настройки сайта
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fa-solid fa-circle-user"></i> Личный кабинет
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('user_dashboard') }}">
+                                    <i class="fa-solid fa-id-card"></i> Мой профиль
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('user_applications') }}">
+                                    <i class="fa-solid fa-clipboard-list"></i> Мои заявки
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('user_reviews') }}">
+                                    <i class="fa-solid fa-comment-dots"></i> Мои отзывы
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="fa-solid fa-right-from-bracket"></i> Выйти
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary" href="{{ url_for('login') }}">
+                            <i class="fa-brands fa-telegram"></i> Войти через Telegram
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="flash-messages container animated fade-in">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fa-solid {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-times-circle{% else %}fa-info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert">
+                            <i class="fas fa-times" style="color:#fff !important; display:flex; justify-content:center; align-items:center; width:100%; height:100%;"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow-1">
+        <div class="container py-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5><i class="fa-solid fa-circle-info"></i> О компании</h5>
+                    <div class="footer-about">
+                        <p>{{ site_settings.footer_about }}</p>
+                    </div>
+                    <div class="social-icons" {% if not site_settings.show_social_icons %}style="display: none;"{% endif %}>
+                        {% if site_settings.website_url %}
+                        <a href="{{ site_settings.website_url }}" target="_blank" title="Веб-сайт">
+                            <i class="fa-solid fa-globe" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.vk_url %}
+                        <a href="{{ site_settings.vk_url }}" target="_blank" title="VKontakte">
+                            <i class="fa-brands fa-vk" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.telegram_url %}
+                        <a href="{{ site_settings.telegram_url }}" target="_blank" title="Telegram">
+                            <i class="fa-brands fa-telegram" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.facebook_url %}
+                        <a href="{{ site_settings.facebook_url }}" target="_blank" title="Facebook">
+                            <i class="fa-brands fa-facebook" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.instagram_url %}
+                        <a href="{{ site_settings.instagram_url }}" target="_blank" title="Instagram">
+                            <i class="fa-brands fa-instagram" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                        {% if site_settings.whatsapp_url %}
+                        <a href="{{ site_settings.whatsapp_url }}" target="_blank" title="WhatsApp">
+                            <i class="fa-brands fa-whatsapp" style="color: {{ site_settings.footer_icons_color }}"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5><i class="fa-solid fa-address-card"></i> Контакты</h5>
+                    <ul class="footer-contact list-unstyled">
+                        {% if site_settings.contact_address %}
+                        <li class="mb-2">
+                            <i class="fa-solid fa-location-dot" style="color: {{ site_settings.contact_icons_color }}"></i>
+                            <span>{{ site_settings.contact_address }}</span>
+                        </li>
+                        {% endif %}
+                        {% if site_settings.contact_phone %}
+                        <li class="mb-2">
+                            <i class="fa-solid fa-phone" style="color: {{ site_settings.contact_icons_color }}"></i>
+                            <span>{{ site_settings.contact_phone }}</span>
+                        </li>
+                        {% endif %}
+                        {% if site_settings.contact_email %}
+                        <li class="mb-2">
+                            <i class="fa-solid fa-envelope" style="color: {{ site_settings.contact_icons_color }}"></i>
+                            <span>{{ site_settings.contact_email }}</span>
+                        </li>
+                        {% endif %}
+                        {% if site_settings.contact_hours %}
+                        <li class="mb-2">
+                            <i class="fa-solid fa-clock" style="color: {{ site_settings.contact_icons_color }}"></i>
+                            <span style="white-space: pre-line">{{ site_settings.contact_hours }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5><i class="fa-solid fa-compass"></i> Навигация</h5>
+                    <ul class="footer-links list-unstyled">
+                        <li class="mb-2">
+                            <a href="{{ url_for('index') }}">
+                                <i class="fa-solid fa-house"></i>
+                                <span>Главная</span>
+                            </a>
+                        </li>
+                        {% if not current_user.is_authenticated %}
+                        <li class="mb-2">
+                            <a href="{{ url_for('login') }}">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                                <span>Войти</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="mb-2">
+                            <a href="{{ url_for('user_dashboard') }}">
+                                <i class="fa-solid fa-user"></i>
+                                <span>Личный кабинет</span>
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ url_for('user_applications') }}">
+                                <i class="fa-solid fa-clipboard-list"></i>
+                                <span>Мои заявки</span>
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ url_for('user_reviews') }}">
+                                <i class="fa-solid fa-comment-dots"></i>
+                                <span>Мои отзывы</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <style>
+                    .footer-links a {
+                        color: rgba(255, 255, 255, 0.8);
+                        text-decoration: none;
+                        transition: color 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    }
+                    .footer-links a:hover {
+                        color: #fff;
+                    }
+                    .footer-links i {
+                        min-width: 20px;
+                    }
+                    </style>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <p class="mb-0">&copy; {{ current_year }} {{ site_settings.site_name }}. Все права защищены.</p>
+                    <div class="footer-legal-links">
+                        <a href="{{ url_for('terms') }}" class="text-muted me-3">Условия использования</a>
+                        <a href="{{ url_for('privacy') }}" class="text-muted">Политика конфиденциальности</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+
+    <style>
+    .footer-legal-links {
+        margin-top: 0.5rem;
+    }
+    .footer-legal-links a {
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .footer-legal-links a:hover {
+        color: #fff !important;
+    }
+    @media (min-width: 768px) {
+        .footer-legal-links {
+            margin-top: 0;
+        }
+    }
+    </style>
+
+    <!-- Auto-hide flash messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.alert');
+            flashMessages.forEach(function(flash) {
+                flash.style.animation = 'slideIn 0.5s ease-out forwards';
+                setTimeout(function() {
+                    if (flash.classList.contains('show')) {
+                        flash.style.animation = 'slideOut 0.5s ease-in forwards';
+                        setTimeout(function() {
+                            flash.remove();
+                        }, 500);
+                    }
+                }, 5000);
+            });
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

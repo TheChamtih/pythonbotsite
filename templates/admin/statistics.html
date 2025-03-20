@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика активности пользователей{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Статистика активности пользователей</h1>
+
+    <div class="row">
+        <!-- Общая статистика -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Общая статистика</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6>Всего пользователей:</h6>
+                            <p class="h3">{{ total_users }}</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Активных сегодня:</h6>
+                            <p class="h3">{{ active_today }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика по платформам -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Активность по платформам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="platformChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- График активности -->
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Активность за последние 7 дней</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица последних действий -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Последние действия пользователей</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th>Действие</th>
+                            <th>Время</th>
+                            <th>Платформа</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in recent_activities %}
+                        <tr>
+                            <td>{{ activity.user.display_name }}</td>
+                            <td>{{ activity.activity_type }}</td>
+                            <td>{{ activity.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ activity.details.get('platform', 'web') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // График активности по платформам
+    const platformCtx = document.getElementById('platformChart').getContext('2d');
+    new Chart(platformCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Web', 'Telegram'],
+            datasets: [{
+                data: {{ platform_stats|tojson }},
+                backgroundColor: ['#36a2eb', '#ff6384']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // График активности за последние 7 дней
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ activity_dates|tojson }},
+            datasets: [{
+                label: 'Количество действий',
+                data: {{ activity_counts|tojson }},
+                borderColor: '#36a2eb',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

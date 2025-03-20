@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Мои заявки{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Мои заявки на пробные занятия</h1>
+
+    {% if applications %}
+        <div class="row">
+            {% for application in applications %}
+            <div class="col-md-6 mb-4">
+                <div class="application-card card {% if application.confirmed %}confirmed{% else %}pending{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ application.course.name }}</h5>
+                        <p class="card-text">
+                            <strong>Дата:</strong> {{ application.date.strftime('%d.%m.%Y %H:%M') }}<br>
+                            <strong>Адрес:</strong> {{ application.location.district.name if application.location.district else 'Не указан' }}, {{ application.location.address }}<br>
+                            <strong>Статус:</strong>
+                            {% if application.confirmed %}
+                                <span class="badge bg-success">Подтверждено</span>
+                            {% else %}
+                                <span class="badge bg-warning">Ожидает подтверждения</span>
+                            {% endif %}
+                        </p>
+                        <p class="card-text">
+                            <small class="text-muted">Создано: {{ application.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            У вас пока нет заявок на пробные занятия. 
+            <a href="{{ url_for('index') }}" class="alert-link">Посмотреть доступные курсы</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

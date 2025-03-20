@@ -1,0 +1,169 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='js/main.js') }}">
+{% extends "base.html" %}
+
+{% block title %}Управление локациями{% endblock %}
+
+{% block content %}
+<style>
+    @media (max-width: 767px) {
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .btn-group .btn {
+            width: 100%;
+            margin: 3px 0;
+            border-radius: 4px !important;
+        }
+        .card-header {
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card-header h5 {
+            margin-bottom: 10px;
+        }
+        .list-group-item {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        .list-group-item .btn-group {
+            margin-top: 10px;
+        }
+        .modal-dialog {
+            margin: 10px;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+    <h1>Управление локациями</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
+        <i class="fa-solid fa-circle-plus"></i> Добавить новый район
+    </button>
+</div>
+
+<div class="row">
+    {% for district in districts %}
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ district.name }}</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editDistrict{{ district.id }}Modal">
+                        <i class="fa-solid fa-pen"></i> Редактировать
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#addLocation{{ district.id }}Modal">
+                        <i class="fa-solid fa-plus"></i> Добавить адрес
+                    </button>
+                    <a href="{{ url_for('delete_district', id=district.id) }}" 
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('Вы уверены, что хотите удалить этот район и все его адреса?')">
+                        <i class="fa-solid fa-trash"></i> Удалить
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for location in locations if location.district_id == district.id %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-location-dot"></i> {{ location.address }}</span>
+                        <div class="btn-group">
+                            <a href="{{ url_for('edit_location', id=location.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <a href="{{ url_for('delete_location', id=location.id) }}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Вы уверены, что хотите удалить этот адрес?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно редактирования района -->
+        <div class="modal fade" id="editDistrict{{ district.id }}Modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Редактировать район</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="{{ url_for('edit_district', id=district.id) }}" class="needs-validation" novalidate>
+                            {{ district_form.csrf_token }}
+                            <div class="mb-3">
+                                {{ district_form.name.label(class="form-label") }}
+                                {{ district_form.name(class="form-control", value=district.name) }}
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                <button type="submit" class="btn btn-primary">Сохранить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно добавления адреса -->
+        <div class="modal fade" id="addLocation{{ district.id }}Modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Добавить адрес</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="{{ url_for('add_location', district_id=district.id) }}" class="needs-validation" novalidate>
+                            {{ location_form.csrf_token }}
+                            <div class="mb-3">
+                                {{ location_form.address.label(class="form-label") }}
+                                {{ location_form.address(class="form-control") }}
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                <button type="submit" class="btn btn-primary">Добавить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Модальное окно добавления района -->
+<div class="modal fade" id="addDistrictModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить новый район</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin_locations') }}" class="needs-validation" novalidate>
+                    {{ district_form.csrf_token }}
+                    <div class="mb-3">
+                        {{ district_form.name.label(class="form-label") }}
+                        {{ district_form.name(class="form-control") }}
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

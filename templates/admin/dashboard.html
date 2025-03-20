@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4 gradient-text">Панель администратора</h1>
+
+    <!-- Статистика -->
+    <div class="dashboard-stats">
+        <div class="stats-card">
+            <div class="stats-card-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <h6 class="stats-card-title">Всего курсов</h6>
+            <div class="stats-card-value">{{ courses_count }}</div>
+            <div class="stats-card-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>5% с прошлого месяца</span>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-card-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h6 class="stats-card-title">Локации</h6>
+            <div class="stats-card-value">{{ locations_count }}</div>
+            <div class="stats-card-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>2 новых места</span>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-card-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <h6 class="stats-card-title">Всего заявок</h6>
+            <div class="stats-card-value">{{ applications_count }}</div>
+            <div class="stats-card-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>12% с прошлого месяца</span>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stats-card-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h6 class="stats-card-title">Ожидающие заявки</h6>
+            <div class="stats-card-value">{{ pending_count }}</div>
+            <div class="stats-card-trend {% if applications_count > 0 and pending_count > applications_count * 0.3 %}negative{% else %}positive{% endif %}">
+                <i class="fas fa-{% if applications_count > 0 and pending_count > applications_count * 0.3 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                <span>
+                    {% if applications_count > 0 %}
+                        {{ (pending_count / applications_count * 100)|round|int }}% от всех заявок
+                    {% else %}
+                        Нет активных заявок
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия и График -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center mb-4">
+                        <i class="fas fa-bolt text-primary me-2"></i>
+                        Быстрые действия
+                    </h5>
+                    <div class="list-group">
+                        <a href="{{ url_for('admin_courses') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="fas fa-book text-primary me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Управление курсами</h6>
+                                <small class="text-muted">Добавление и редактирование курсов</small>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_locations') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt text-success me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Управление локациями</h6>
+                                <small class="text-muted">Настройка мест проведения занятий</small>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_applications') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="fas fa-clipboard-list text-info me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Просмотр заявок</h6>
+                                <small class="text-muted">Обработка заявок на пробные занятия</small>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_news_categories') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="fas fa-folder-open text-warning me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Категории новостей</h6>
+                                <small class="text-muted">Управление категориями для публикаций</small>
+                            </div>
+                        </a>
+                        <a href="{{ url_for('admin_reviews') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <i class="fas fa-star text-warning me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Статистика отзывов</h6>
+                                <small class="text-muted">Анализ отзывов и рейтингов</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="activity-chart">
+                <div class="activity-chart-header">
+                    <h5 class="activity-chart-title">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Обзор заявок
+                    </h5>
+                    <div class="activity-chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #1cc88a;"></div>
+                            <span>Подтверждено</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f6c23e;"></div>
+                            <span>Ожидает</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="applicationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('applicationsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Подтверждено', 'Ожидает'],
+            datasets: [{
+                data: [{{ applications_count - pending_count }}, {{ pending_count }}],
+                backgroundColor: ['#1cc88a', '#f6c23e'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            cutout: '70%',
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

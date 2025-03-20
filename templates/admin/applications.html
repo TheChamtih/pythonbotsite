@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки на пробные занятия{% endblock %}
+
+{% block content %}
+<style>
+    .application-card {
+        transition: all 0.3s ease;
+    }
+    .application-card.confirmed {
+        border-left: 4px solid var(--bs-success);
+    }
+    .application-card.pending {
+        border-left: 4px solid var(--bs-warning);
+    }
+
+    .filter-buttons {
+        margin: 1.5rem 0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .status-badge.confirmed {
+        background-color: var(--bs-success);
+        color: white;
+    }
+
+    .status-badge.pending {
+        background-color: var(--bs-warning);
+        color: var(--bs-dark);
+    }
+
+    @media (max-width: 767px) {
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .btn-group .btn {
+            width: 100%;
+            margin: 0.25rem 0;
+            border-radius: 4px !important;
+        }
+        .application-item .card-body {
+            padding: 1rem;
+        }
+        .application-item .row > div {
+            margin-bottom: 1rem;
+        }
+        .application-item .col-md-4 {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .application-item .col-md-4:last-child {
+            border-bottom: none;
+            text-align: left;
+        }
+        .status-badge {
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+        .action-buttons {
+            margin-top: 1rem;
+        }
+    }
+</style>
+
+<div class="mb-4">
+    <h1>Заявки на пробные занятия</h1>
+    <div class="filter-buttons">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary active" data-filter="all">Все</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="pending">Ожидают</button>
+            <button type="button" class="btn btn-outline-primary" data-filter="confirmed">Подтверждены</button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for application in applications %}
+    <div class="col-12 mb-3 application-item" 
+         data-status="{{ 'confirmed' if application.confirmed else 'pending' }}">
+        <div class="card application-card {{ 'confirmed' if application.confirmed else 'pending' }}">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5 class="card-title">{{ application.user.child_name }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Возраст: {{ application.user.child_age }} лет<br>
+                                Родитель: {{ application.user.parent_name }}<br>
+                                Телефон: {{ application.user.phone }}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Детали курса</h6>
+                        <p class="card-text">
+                            <strong>{{ application.course.name }}</strong><br>
+                            <small class="text-muted">
+                                Адрес: {{ application.location.district.name }}, {{ application.location.address }}<br>
+                                Дата: {{ application.date.strftime('%d.%m.%Y %H:%M') }}
+                            </small>
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="status-badge {{ 'confirmed' if application.confirmed else 'pending' }}">
+                            {{ 'Подтверждено' if application.confirmed else 'Ожидает подтверждения' }}
+                        </span>
+                        <div class="btn-group d-block action-buttons">
+                            {% if not application.confirmed %}
+                            <a href="{{ url_for('approve_application', id=application.id) }}" 
+                               class="btn btn-success btn-sm">
+                                <i class="bi bi-check-circle"></i> Подтвердить
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('reject_application', id=application.id) }}" 
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Вы уверены, что хотите отклонить эту заявку?')">
+                                <i class="bi bi-x-circle"></i> Отклонить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not applications %}
+<div class="text-center py-5">
+    <i class="bi bi-inbox display-1 text-muted"></i>
+    <h3 class="mt-3">Заявок не найдено</h3>
+    <p class="text-muted">На данный момент нет заявок на пробные занятия.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Фильтрация заявок
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            const applications = document.querySelectorAll('.application-item');
+
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+
+            applications.forEach(app => {
+                if (filter === 'all' || app.dataset.status === filter) {
+                    app.style.display = 'block';
+                } else {
+                    app.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

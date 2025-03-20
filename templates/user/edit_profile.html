@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование профиля{% endblock %}
+
+{% block content %}
+<div class="container py-4 animated fade-in-up">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4 d-flex align-items-center">
+                        <i class="fas fa-user-edit text-primary me-3"></i>
+                        Редактирование профиля
+                    </h2>
+                    <form method="POST" class="needs-validation" enctype="multipart/form-data" novalidate>
+                        <!-- Avatar Section -->
+                        <div class="text-center mb-4">
+                            <div class="avatar-wrapper position-relative d-inline-block">
+                                <img src="{{ current_user.avatar_url }}" 
+                                     alt="Avatar" 
+                                     class="rounded-circle mb-3"
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                                {% if current_user.avatar_path %}
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                        onclick="deleteAvatar()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="avatar" class="form-label">Изменить аватар</label>
+                                <input type="file" 
+                                       class="form-control" 
+                                       id="avatar" 
+                                       name="avatar" 
+                                       accept="image/*">
+                                <small class="text-muted">Поддерживаемые форматы: PNG, JPG, GIF. Максимальный размер: 5MB</small>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="parent_name" class="form-label">
+                                        <i class="fas fa-user me-2"></i>Имя родителя
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control form-control-lg" 
+                                           id="parent_name" 
+                                           name="parent_name"
+                                           value="{{ current_user.parent_name or '' }}" 
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите имя родителя
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone" class="form-label">
+                                        <i class="fas fa-phone me-2"></i>Телефон
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control form-control-lg" 
+                                           id="phone" 
+                                           name="phone"
+                                           value="{{ current_user.phone or '' }}" 
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите номер телефона
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="child_name" class="form-label">
+                                        <i class="fas fa-child me-2"></i>Имя ребенка
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control form-control-lg" 
+                                           id="child_name" 
+                                           name="child_name"
+                                           value="{{ current_user.child_name or '' }}" 
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите имя ребенка
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="child_age" class="form-label">
+                                        <i class="fas fa-birthday-cake me-2"></i>Возраст ребенка
+                                    </label>
+                                    <input type="number" 
+                                           class="form-control form-control-lg" 
+                                           id="child_age" 
+                                           name="child_age"
+                                           value="{{ current_user.child_age or '' }}" 
+                                           required 
+                                           min="0" 
+                                           max="18">
+                                    <div class="invalid-feedback">
+                                        Пожалуйста, укажите корректный возраст (от 0 до 18 лет)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="child_interests" class="form-label">
+                                        <i class="fas fa-star me-2"></i>Интересы ребенка
+                                    </label>
+                                    <textarea class="form-control form-control-lg" 
+                                              id="child_interests" 
+                                              name="child_interests" 
+                                              rows="4"
+                                              placeholder="Расскажите об интересах вашего ребенка...">{{ current_user.child_interests or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('user_dashboard') }}" 
+                               class="btn btn-outline-secondary btn-lg hover-lift">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Назад
+                            </a>
+                            <button type="submit" 
+                                    class="btn btn-primary btn-lg hover-lift">
+                                <i class="fas fa-save me-2"></i>
+                                Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteAvatar() {
+    if (confirm('Вы уверены, что хотите удалить аватар?')) {
+        fetch('{{ url_for("delete_avatar") }}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении аватара');
+            }
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    // Input animations
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            input.closest('.form-group').classList.add('focused');
+        });
+        input.addEventListener('blur', () => {
+            if (!input.value) {
+                input.closest('.form-group').classList.remove('focused');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.avatar-wrapper {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+}
+
+.form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.btn {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+    color: var(--danger-color);
+    margin-top: 0.25rem;
+}
+
+.form-control.is-invalid {
+    border-color: var(--danger-color);
+    background-image: none;
+}
+
+.form-control.is-invalid:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 0.2rem rgba(231, 74, 59, 0.25);
+}
+
+/* Animations */
+.animated {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.fade-in-up {
+    animation-name: fadeInUp;
+}
+</style>
+{% endblock %}
